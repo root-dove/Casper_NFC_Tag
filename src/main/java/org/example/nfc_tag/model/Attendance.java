@@ -1,12 +1,26 @@
 package org.example.nfc_tag.model;
 
-import jakarta.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Entity
+@Getter
+@Setter
 public class Attendance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,29 +34,31 @@ public class Attendance {
     private LocalDate attendanceDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private AttendanceStatus status;
 
-    public User getUser() {
-        return user;
+    @Column(length = 255)
+    private String comment;
+
+    @Column
+    private LocalTime time;
+
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    private LocalDateTime updatedAt;
+
+    // ✅ 생성 시간 자동 설정
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public LocalDate getDate() {
-        return attendanceDate;
-    }
-
-    public void setDate(LocalDate date) {
-        this.attendanceDate = date;
-    }
-
-    public AttendanceStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(AttendanceStatus status) {
-        this.status = status;
+    // ✅ 수정 시간 자동 업데이트
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
