@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.example.nfc_tag.entity.Card;
 import org.example.nfc_tag.entity.NewUser;
 import org.example.nfc_tag.model.Attendance;
 import org.example.nfc_tag.model.AttendanceStatus;
 import org.example.nfc_tag.entity.User;
 import org.example.nfc_tag.repository.AttendanceRepository;
+import org.example.nfc_tag.repository.CardRepository;
 import org.example.nfc_tag.repository.NewUserRepository;
 import org.example.nfc_tag.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -23,29 +25,42 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
     private final NewUserRepository newUserRepository;
+    private final CardRepository cardRepository;
 
-    public AttendanceService(AttendanceRepository attendanceRepository, UserRepository userRepository, NewUserRepository newUserRepository) {
+    public AttendanceService(AttendanceRepository attendanceRepository, UserRepository userRepository, NewUserRepository newUserRepository, CardRepository cardRepository) {
         this.attendanceRepository = attendanceRepository;
         this.userRepository = userRepository;
         this.newUserRepository = newUserRepository;
+        this.cardRepository = cardRepository;
     }
-
-    public String markAttendance(Long userId) {
-        Optional<User> userOptional = userRepository.findById(userId);
+    @Transactional
+    public String markAttendance(Long nfcId) {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
-//         없는 사용자라면 new_user 테이블에 추가
-        if (userOptional.isEmpty()) {
-            if (newUserRepository.findByUserId(userId).isPresent()) {
+        // NFC 카드가 등록되어 있는지 확인
+        Optional<Card> cardOptional = cardRepository.findByNfcIdWithLock(nfcId);
+        if (cardOptional.isEmpty()) {
+            // 카드가 등록되지 않았다면 new_user 테이블에 추가
+            if (newUserRepository.findByUserId(nfcId).isPresent()) {
                 return "User already exists in new_user table!";
             }
 
             NewUser newUser = new NewUser();
-            newUser.setUserId(userId);
+            newUser.setUserId(nfcId);
             newUser.setDate(today);
             newUserRepository.save(newUser);
-            return "User not found! User ID added to new_user table.";
+            return "Card ID not found! User ID added to new_user table.";
+        }
+
+        // Card 테이블에서 User ID 가져오기
+        Card card = cardOptional.get();
+        Long userId = card.getUser().getId(); // 카드가 매핑된 userId 가져오기
+
+        // 유저가 존재하는지 확인
+        Optional<User> userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            return "User not found in user table!";
         }
 
         User user = userOptional.get();
@@ -70,6 +85,7 @@ public class AttendanceService {
         attendanceRepository.save(attendance);
         return "Attendance marked as " + status + "!";
     }
+
     public List<AttendanceDTO> getAttendanceRecords(Long userId, LocalDate startDate, LocalDate endDate) {
         List<Attendance> attendances = attendanceRepository.findByUserIdAndAttendanceDateBetween(userId, startDate, endDate);
         

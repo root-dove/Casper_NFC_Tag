@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
 
@@ -23,22 +25,24 @@ public class UserService {
 
     @Transactional
     public String registerUserAndCard(UserCardDTO dto) {
-        // NFC ID 중복 체크
+        // 📌 NFC ID 중복 체크 (이미 등록된 카드인지 확인)
         if (cardRepository.existsByNfcId(dto.getNfcId())) {
             return "NFC ID already exists!";
         }
 
-        // 1. User 테이블에 유저 추가
+        // 📌 1. User 테이블에 유저 추가
         User newUser = new User();
         newUser.setName(dto.getUserName());
-        userRepository.save(newUser); // 저장 후 ID 자동 생성
+        userRepository.save(newUser); // ✅ ID 자동 생성
 
-        // 2. Card 테이블에 NFC 정보 추가
+        // 📌 2. Card 테이블에 NFC 정보 추가
         Card newCard = new Card();
-        newCard.setNfcId(dto.getNfcId());
+        newCard.setNfcId(dto.getNfcId()); // ✅ NFC ID는 별도 필드
         newCard.setUser(newUser);
-        cardRepository.save(newCard);
+
+        cardRepository.save(newCard); // ✅ 자동 증가된 ID 사용
 
         return "User and NFC card registered successfully!";
     }
+
 }

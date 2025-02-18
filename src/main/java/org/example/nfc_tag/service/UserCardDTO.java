@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class UserCardDTO {
     private String userName; // 유저 이름
-    private String nfcId;    // NFC ID
+    private Long nfcId;    // NFC ID
 }

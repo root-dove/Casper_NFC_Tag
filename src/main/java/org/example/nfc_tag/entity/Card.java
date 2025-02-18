@@ -12,11 +12,11 @@ import java.time.LocalDateTime;
 @Table(name = "card")
 public class Card {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 🔥 ID 자동 증가 (자동 생성)
+    private Long id; // ✅ DB에서 자동 생성됨
 
     @Column(unique = true, nullable = false)
-    private String nfcId;
+    private Long nfcId; // ✅ nfcId는 기본 키가 아님 (별도 컬럼)
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -25,3 +25,4 @@ public class Card {
     @Column(nullable = false, updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
 }
+
