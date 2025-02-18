@@ -9,16 +9,10 @@ import org.example.nfc_tag.service.AttendanceUpdateDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin(origins = "http://192.168.45.39:3000")  // 특정 도메인 허용
 @RequestMapping("/attendance")
 public class AttendanceController {
     private final AttendanceService attendanceService;
@@ -32,17 +26,7 @@ public class AttendanceController {
     @PostMapping("/mark")
     public ResponseEntity<String> markAttendance(@RequestParam String userIdHex) {
         try {
-            logger.info("Received userIdHex: {}", userIdHex);
-            
-            // 유효한 16진수 값인지 확인
-            if (!userIdHex.matches("^[0-9A-Fa-f]+$")) {
-                logger.warn("Invalid hexadecimal format: {}", userIdHex);
-                return ResponseEntity.status(400).body("Invalid userId: must be a valid hexadecimal string.");
-            }
-
-            // 변환 후 로깅
             Long userId = Long.parseUnsignedLong(userIdHex, 16);
-            logger.info("Converted userId: {}", userId);
 
             // 출석 처리 서비스 호출
             String response = attendanceService.markAttendance(userId);
@@ -76,7 +60,7 @@ public class AttendanceController {
         if (response.contains("successfully")) {
             return ResponseEntity.ok(response);
         } else {
-            return ResponseEntity.status(404).body(response);
+            return ResponseEntity.status(403).body(response);
         }
     }
 

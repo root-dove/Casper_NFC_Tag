@@ -5,5 +5,6 @@ public enum AttendanceStatus {
     LATE,
     ABSENT,
     VACATION,
-    OFFICIAL_LEAVE; // 혹시 OFFICIALLEAVE로 되어 있다면 언더스코어 추가
+    OFFICIAL_LEAVE,// 혹시 OFFICIALLEAVE로 되어 있다면 언더스코어 추가
+    NOT_YET
 }

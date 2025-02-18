@@ -1,4 +1,4 @@
-package org.example.nfc_tag.model;
+package org.example.nfc_tag.entity;
 
 import jakarta.persistence.*;
 

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.example.nfc_tag.entity.NewUser;
 import org.example.nfc_tag.model.Attendance;
 import org.example.nfc_tag.model.AttendanceStatus;
-import org.example.nfc_tag.model.User;
+import org.example.nfc_tag.entity.User;
 import org.example.nfc_tag.repository.AttendanceRepository;
 import org.example.nfc_tag.repository.NewUserRepository;
 import org.example.nfc_tag.repository.UserRepository;
@@ -35,8 +35,12 @@ public class AttendanceService {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
 
-        // 없는 사용자라면 new_user 테이블에 추가
+//         없는 사용자라면 new_user 테이블에 추가
         if (userOptional.isEmpty()) {
+            if (newUserRepository.findByUserId(userId).isPresent()) {
+                return "User already exists in new_user table!";
+            }
+
             NewUser newUser = new NewUser();
             newUser.setUserId(userId);
             newUser.setDate(today);
@@ -78,13 +82,21 @@ public class AttendanceService {
             ))
             .collect(Collectors.toList());
     }
-    
+
     // 출근 상황 조절
     public String updateAttendance(AttendanceUpdateDTO dto) {
-        Optional<Attendance> optionalAttendance = attendanceRepository.findByUserIdAndAttendanceDate(dto.getUserId(), dto.getAttendanceDate());
+        Optional<User> userOptional = userRepository.findById(dto.getUserId());
+        if (userOptional.isEmpty()) {
+            return "User not found!";
+        }
 
+        User user = userOptional.get();
+        LocalDate date = dto.getAttendanceDate();
+        Optional<Attendance> optionalAttendance = attendanceRepository.findByUserIdAndAttendanceDate(user.getId(), date);
+
+        Attendance attendance;
         if (optionalAttendance.isPresent()) {
-            Attendance attendance = optionalAttendance.get();
+            attendance = optionalAttendance.get();
             attendance.setStatus(AttendanceStatus.valueOf(dto.getStatus().toUpperCase())); // Enum 변환
             attendance.setComment(dto.getComment());
             attendance.setTime(dto.getTime());
@@ -92,8 +104,19 @@ public class AttendanceService {
             attendanceRepository.save(attendance);
             return "Attendance record updated successfully.";
         } else {
-            return "No attendance record found for the given user and date.";
+            // 새로운 데이터 생성
+            attendance = new Attendance();
+            attendance.setUser(user);
+            attendance.setAttendanceDate(date);
+            attendance.setStatus(AttendanceStatus.valueOf(dto.getStatus().toUpperCase()));
+            attendance.setComment(dto.getComment());
+            attendance.setTime(dto.getTime() != null ? dto.getTime() : LocalTime.now());
+            attendance.setCreatedAt(LocalDateTime.now());
+            attendance.setUpdatedAt(LocalDateTime.now());
         }
+
+        attendanceRepository.save(attendance);
+        return "Attendance updated successfully!";
     }
 
     // 휴가 일수 조정정
