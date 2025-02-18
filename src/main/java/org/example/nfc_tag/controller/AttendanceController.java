@@ -6,6 +6,8 @@ import java.util.List;
 import org.example.nfc_tag.service.AttendanceDTO;
 import org.example.nfc_tag.service.AttendanceService;
 import org.example.nfc_tag.service.AttendanceUpdateDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/attendance")
 public class AttendanceController {
     private final AttendanceService attendanceService;
+    private static final Logger logger = LoggerFactory.getLogger(AttendanceController.class);
 
     public AttendanceController(AttendanceService attendanceService) {
         this.attendanceService = attendanceService;
@@ -27,10 +30,26 @@ public class AttendanceController {
 
     // ✅ 출석 기록 추가 API
     @PostMapping("/mark")
-    public ResponseEntity<String> markAttendance(@RequestParam Long userId) {
+    public ResponseEntity<String> markAttendance(@RequestParam String userIdHex) {
         try {
+            logger.info("Received userIdHex: {}", userIdHex);
+            
+            // 유효한 16진수 값인지 확인
+            if (!userIdHex.matches("^[0-9A-Fa-f]+$")) {
+                logger.warn("Invalid hexadecimal format: {}", userIdHex);
+                return ResponseEntity.status(400).body("Invalid userId: must be a valid hexadecimal string.");
+            }
+
+            // 변환 후 로깅
+            Long userId = Long.parseUnsignedLong(userIdHex, 16);
+            logger.info("Converted userId: {}", userId);
+
+            // 출석 처리 서비스 호출
             String response = attendanceService.markAttendance(userId);
             return ResponseEntity.ok(response); // 출석 기록 성공
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.status(400).body("Invalid userId: must be a valid hexadecimal string.");
         } catch (Exception e) {
             return ResponseEntity.status(400).body("Error: " + e.getMessage());
         }

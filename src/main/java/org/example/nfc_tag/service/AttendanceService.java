@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.example.nfc_tag.entity.NewUser;
 import org.example.nfc_tag.model.Attendance;
 import org.example.nfc_tag.model.AttendanceStatus;
 import org.example.nfc_tag.model.User;
 import org.example.nfc_tag.repository.AttendanceRepository;
+import org.example.nfc_tag.repository.NewUserRepository;
 import org.example.nfc_tag.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,21 +22,29 @@ import jakarta.transaction.Transactional;
 public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
+    private final NewUserRepository newUserRepository;
 
-    public AttendanceService(AttendanceRepository attendanceRepository, UserRepository userRepository) {
+    public AttendanceService(AttendanceRepository attendanceRepository, UserRepository userRepository, NewUserRepository newUserRepository) {
         this.attendanceRepository = attendanceRepository;
         this.userRepository = userRepository;
+        this.newUserRepository = newUserRepository;
     }
 
     public String markAttendance(Long userId) {
         Optional<User> userOptional = userRepository.findById(userId);
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+
+        // 없는 사용자라면 new_user 테이블에 추가
         if (userOptional.isEmpty()) {
-            return "User not found!";
+            NewUser newUser = new NewUser();
+            newUser.setUserId(userId);
+            newUser.setDate(today);
+            newUserRepository.save(newUser);
+            return "User not found! User ID added to new_user table.";
         }
 
         User user = userOptional.get();
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
 
         // 이미 출석이 기록되어 있는지 확인
         if (attendanceRepository.findByUserIdAndAttendanceDate(userId, today).isPresent()) {
