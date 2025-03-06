@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin(origins = "http://192.168.45.39:3000")  // 특정 도메인 허용
+@CrossOrigin(origins = "*")  // 특정 도메인 허용
 @RequestMapping("/attendance")
 public class AttendanceController {
     private final AttendanceService attendanceService;

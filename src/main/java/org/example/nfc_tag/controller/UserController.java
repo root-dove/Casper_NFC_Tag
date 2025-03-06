@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@CrossOrigin(origins = "http://192.168.45.39:3000")  // 특정 도메인 허용
+@CrossOrigin(origins = "*")  // 특정 도메인 허용
 @RequestMapping("/users")
 public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(AttendanceController.class);

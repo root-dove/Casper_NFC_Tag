@@ -6,6 +6,8 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.example.nfc_tag.entity.Card;
 import org.example.nfc_tag.entity.NewUser;
@@ -26,6 +28,7 @@ public class AttendanceService {
     private final UserRepository userRepository;
     private final NewUserRepository newUserRepository;
     private final CardRepository cardRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AttendanceService.class);
 
     public AttendanceService(AttendanceRepository attendanceRepository, UserRepository userRepository, NewUserRepository newUserRepository, CardRepository cardRepository) {
         this.attendanceRepository = attendanceRepository;
@@ -55,6 +58,7 @@ public class AttendanceService {
 
         // Card 테이블에서 User ID 가져오기
         Card card = cardOptional.get();
+
         Long userId = card.getUser().getId(); // 카드가 매핑된 userId 가져오기
 
         // 유저가 존재하는지 확인
